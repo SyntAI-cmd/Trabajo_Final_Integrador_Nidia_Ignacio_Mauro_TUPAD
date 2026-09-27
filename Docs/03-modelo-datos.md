@@ -1,17 +1,15 @@
 # Modelo de datos
 
-El sistema guarda su información en cuatro tablas. Este documento explica qué guarda cada una y por qué está diseñada así.
+El sistema guarda su información en seis tablas. Este documento explica qué guarda cada una y por qué está diseñada así.
 
 ## Cómo se relacionan
 
-```
-usuario            (quien entra al sistema)
+usuario (Personal del refugio)
 
-mascota  ─┬─< vacuna      (una mascota tiene muchas vacunas)
-          └─< foto        (una mascota tiene muchas fotos)
-```
+adoptante (Persona que adopta) ───< adopcion >─── mascota ─┬─< vacuna
+                                                           └─< foto
 
-La tabla `usuario` no se relaciona con las demás. En esta versión no guardamos quién cargó cada mascota. Es información que se podría agregar después con una columna más, pero por ahora no la necesitamos y agregarla implicaría arrastrarla en todas las pantallas.
+La tabla `usuario` pertenece de forma exclusiva al personal que gestiona el refugio. Los procesos de adopción se vinculan formalmente entre el `adoptante` (persona de la comunidad) y la `mascota` mediante la tabla intermedia `adopcion`.
 
 ---
 
@@ -45,7 +43,7 @@ El animal. Es la tabla central del sistema.
 | sexo | texto corto | MACHO o HEMBRA. |
 | tamanio | texto corto | CHICO, MEDIANO o GRANDE. |
 | fecha_nacimiento_aprox | fecha, puede estar vacía | Casi nunca se sabe la fecha exacta. Se carga una estimación, o se deja vacía. |
-| fecha_ingreso | fecha | Cuándo llegó al refugio. Sirve para saber hace cuánto está esperando. |
+| fecha_ingreso | fecha | Cuándo llegó al refugio. Sirve para saber hace工夫 cuánto está esperando. |
 | descripcion | texto largo | Cómo es el animal, cómo se lleva con chicos o con otros animales, si tiene alguna particularidad. Texto libre. |
 | estado | texto corto | DISPONIBLE, EN_PROCESO, ADOPTADO o NO_DISPONIBLE. |
 
@@ -93,10 +91,37 @@ Las imágenes de cada animal.
 
 ---
 
+## Tabla `adoptante`
+
+Registro de las personas interesadas en adoptar una mascota. No tienen credenciales de acceso al sistema operativo del refugio.
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| id | entero, autoincremental | Identificador único del adoptante. |
+| nombre_completo | texto (100) | Nombre y apellido del interesado. |
+| dni | texto (20), único | Documento de identidad indispensable para actas legales. |
+| telefono | texto (30) | Teléfono de contacto. |
+| direccion | texto (255) | Domicilio (requerido para visitas de seguimiento). |
+
+---
+
+## Tabla `adopcion`
+
+El registro oficial del trámite. Une al adoptante con la mascota que adopta, permitiendo realizar seguimientos a futuro.
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| id | entero, autoincremental | Identificador único del trámite. |
+| adoptante_id | entero | Qué persona externa adoptó al animal. |
+| mascota_id | entero, único | Qué mascota fue adoptada. Es único porque un animal no se adopta dos veces. |
+| fecha_adopcion | fecha | Cuándo se concretó la entrega. |
+| notas_seguimiento | texto largo, puede estar vacío | Historial de visitas, llamadas o notas de bienestar del animal en su nuevo hogar. |
+
+**Por qué `mascota_id` tiene una restricción de unicidad (UNIQUE).** Para evitar errores humanos: un animal no puede ser adoptado simultáneamente por dos registros diferentes en el sistema.
+
+---
+
 ## Lo que este modelo no contempla
 
-- **No hay tabla de adoptantes ni de solicitudes.** Está fuera del alcance de esta versión (ver `01-alcance.md`).
-- **No hay historial de cambios.** Si alguien cambia el estado de un animal, el estado anterior se pierde. Registrar el historial requiere una tabla más y no lo necesitamos todavía.
-- **No hay tabla de refugios.** El sistema se instala para un refugio.
-
-Las tres cosas se  agregarian más adelante sin rehacer lo que ya está.
+- **No hay historial de cambios generales.** Si alguien cambia el estado de un animal sin concretar una adopción, el estado anterior se pierde. Registrar el historial completo requiere una tabla de auditoría más y no la necesitamos todavía.
+- **No hay tabla de refugios.** El sistema se instala de forma local o única para un solo refugio.                                                          
