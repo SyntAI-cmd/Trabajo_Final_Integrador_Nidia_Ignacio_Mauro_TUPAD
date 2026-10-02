@@ -1,13 +1,17 @@
 # Modelo de datos
 
-El sistema guarda su información en seis tablas. Este documento explica qué guarda cada una y por qué está diseñada así.
+El sistema guarda su información en seis tablas principales, más dos tablas maestras chicas (`especie_dicc` y `estado_dicc`) que solo guardan los valores permitidos. Este documento explica qué guarda cada una y por qué está diseñada así.
 
 ## Cómo se relacionan
 
+```
 usuario (Personal del refugio)
 
 adoptante (Persona que adopta) ───< adopcion >─── mascota ─┬─< vacuna
                                                            └─< foto
+
+especie_dicc ───< mascota >─── estado_dicc     (tablas maestras)
+```
 
 La tabla `usuario` pertenece de forma exclusiva al personal que gestiona el refugio. Los procesos de adopción se vinculan formalmente entre el `adoptante` (persona de la comunidad) y la `mascota` mediante la tabla intermedia `adopcion`.
 
@@ -43,7 +47,7 @@ El animal. Es la tabla central del sistema.
 | sexo | texto corto | MACHO o HEMBRA. |
 | tamanio | texto corto | CHICO, MEDIANO o GRANDE. |
 | fecha_nacimiento_aprox | fecha, puede estar vacía | Casi nunca se sabe la fecha exacta. Se carga una estimación, o se deja vacía. |
-| fecha_ingreso | fecha | Cuándo llegó al refugio. Sirve para saber hace工夫 cuánto está esperando. |
+| fecha_ingreso | fecha | Cuándo llegó al refugio. Sirve para saber hace cuánto está esperando. |
 | descripcion | texto largo | Cómo es el animal, cómo se lleva con chicos o con otros animales, si tiene alguna particularidad. Texto libre. |
 | estado | texto corto | DISPONIBLE, EN_PROCESO, ADOPTADO o NO_DISPONIBLE. |
 
@@ -51,7 +55,7 @@ El animal. Es la tabla central del sistema.
 
 **Por qué guardamos la fecha de nacimiento y no la edad.** Si guardáramos "2 años", ese número queda mal dentro de un año. La fecha no se desactualiza nunca: la edad se calcula al momento de mostrarla.
 
-**Por qué el estado es una columna y no una tabla aparte.** Son cuatro valores fijos que no van a cambiar. Una tabla de estados tendría sentido si el refugio pudiera crear estados nuevos, y no es el caso.
+**Por qué la especie y el estado se validan contra una tabla maestra.** Los valores posibles son fijos (PERRO / GATO y los cuatro estados), pero se guardan en `especie_dicc` y `estado_dicc` y `mascota` los referencia con una clave foránea. Así la base rechaza cualquier valor mal escrito aunque venga de un INSERT hecho a mano. El refugio no puede crear valores nuevos desde la aplicación: en Java se manejan como `enum`. Para `sexo` y `tamanio` alcanza con una restricción `CHECK`.
 
 ---
 
@@ -124,4 +128,4 @@ El registro oficial del trámite. Une al adoptante con la mascota que adopta, pe
 ## Lo que este modelo no contempla
 
 - **No hay historial de cambios generales.** Si alguien cambia el estado de un animal sin concretar una adopción, el estado anterior se pierde. Registrar el historial completo requiere una tabla de auditoría más y no la necesitamos todavía.
-- **No hay tabla de refugios.** El sistema se instala de forma local o única para un solo refugio.                                                          
+- **No hay tabla de refugios.** El sistema se instala de forma local o única para un solo refugio.
