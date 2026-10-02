@@ -1,6 +1,6 @@
 # Reparto de tareas
 
-Este documento traduce el tablero de Trello del proyecto a texto, para que quede versionado en el repositorio y no dependa de que los tres tengamos la sesión de Trello abierta. Es una fotografía del tablero al **10 de septiembre de 2026**; el tablero en sí sigue siendo la fuente viva donde se mueven las tarjetas día a día.
+Este documento traduce el tablero de Trello del proyecto a texto, para que quede versionado en el repositorio y no dependa de que los tres tengamos la sesión de Trello abierta. Es una fotografía del tablero al **1 de octubre de 2026**; el tablero en sí sigue siendo la fuente viva donde se mueven las tarjetas día a día.
 
 El tablero tiene cinco columnas y las tarjetas se mueven de izquierda a derecha a medida que avanzan:
 
@@ -23,7 +23,7 @@ Las tarjetas de la etiqueta `Base del proyecto` bloquean a todas las demás: sin
 | Tarea | Responsable | Estado | Se considera terminada cuando... |
 |---|---|---|---|
 | Crear el proyecto Spring Boot con Maven y subirlo | Mauro | 🔧 Haciendo | El proyecto arranque y se vea la estructura base en el repo. |
-| Escribir el script SQL que crea las cuatro tablas | Nidia | 🔧 Haciendo | El script cree las cuatro tablas sin errores. |
+| Escribir el script SQL que crea las tablas | Nidia | ✅ Hecho | El script cree las tablas sin errores. |
 | Configurar la conexión a MySQL y verificar que arranque | Ignacio | 📝 Pendiente | El sistema levante y se conecte a la base sin fallar. |
 
 ---
@@ -41,17 +41,19 @@ Las tarjetas de la etiqueta `Base del proyecto` bloquean a todas las demás: sin
 | Listado de vacunas en la ficha de administración | 📝 Pendiente | El administrador vea ahí el historial de vacunas. |
 | Hoja de estilos que se adapte al celular | 📝 Pendiente | Las pantallas se usen cómodo en una pantalla chica. |
 | Probar la secuencia completa de punta a punta *(junto con Mauro)* | 📝 Pendiente | El flujo funcione sin errores de principio a fin. |
-| Subir el CONTRIBUTING con las reglas de trabajo en el repo | 🔧 Haciendo | El archivo explique cómo colaborar y quede guardado en el repositorio. |
-| Subir el archivo de reparto de tareas (este archivo) | 🔧 Haciendo | El archivo esté subido y se vea desde el repositorio. |
-| Mover los documentos a una carpeta `docs/` | 🔍 En revisión | Los archivos estén ahí y el repositorio quede más prolijo. |
+| Subir el CONTRIBUTING con las reglas de trabajo en el repo | 🔍 En revisión | El archivo explique cómo colaborar y quede guardado en el repositorio. |
+| Arquitectura: armar las relaciones de las carpetas y definir si usamos capas, dominio o monolito modular | 🔍 En revisión | Esté escrito `05-arquitectura.md` y la decisión 6 en `02-decisiones.md`. |
+| Escribir en el README cómo instalar y correr el proyecto | 🔍 En revisión | Alguien que clona el repo pueda levantarlo siguiendo solo el README. |
+| Subir el archivo de reparto de tareas (este archivo) | ✅ Hecho | El archivo esté subido y se vea desde el repositorio. |
+| Mover los documentos a una carpeta `Docs/` | ✅ Hecho | Los archivos estén ahí y el repositorio quede más prolijo. |
 
 ### Mauro Ponce
 
 | Tarea | Estado | Se considera terminada cuando... |
 |---|---|---|
 | Crear el proyecto Spring Boot con Maven y subirlo | 🔧 Haciendo | El proyecto arranque y se vea la estructura base en el repo. |
-| Clases de entidad: Mascota, Vacuna, Foto, Usuario | 🔧 Haciendo | Esas clases existan y tengan los campos necesarios del modelo. |
-| Repositorios de Spring Data JPA para las cuatro entidades | 🔧 Haciendo | Cada entidad tenga su repositorio funcionando. |
+| Clases de entidad: Mascota, Vacuna, Foto, Usuario, Adoptante, Adopcion | 🔧 Haciendo | Esas clases existan y tengan los campos necesarios del modelo. |
+| Repositorios de Spring Data JPA para las seis entidades | 🔧 Haciendo | Cada entidad tenga su repositorio funcionando. |
 | Pantalla pública: listado de animales disponibles | 📝 Pendiente | Cualquiera pueda entrar y ver el listado correctamente. |
 | Pantalla pública: ficha de un animal | 📝 Pendiente | Desde el listado se pueda abrir la ficha y ver su información. |
 | Filtros del listado por especie y por tamaño | 📝 Pendiente | El listado muestre solo lo que coincide con el filtro elegido. |
@@ -61,7 +63,7 @@ Las tarjetas de la etiqueta `Base del proyecto` bloquean a todas las demás: sin
 
 | Tarea | Estado | Se considera terminada cuando... |
 |---|---|---|
-| Escribir el script SQL que crea las cuatro tablas | 🔧 Haciendo | El script cree las cuatro tablas sin errores. |
+| Escribir el script SQL que crea las tablas | ✅ Hecho | El script cree las tablas sin errores. |
 | Login y logout con Spring Security | 📝 Pendiente | Se pueda iniciar y cerrar sesión sin problemas. |
 | Guardar la contraseña encriptada con BCrypt | 📝 Pendiente | Las contraseñas se guarden de forma segura y el acceso siga funcionando. |
 | Panel de administración: listado de todos los animales | 📝 Pendiente | El administrador pueda verlos todos desde ese panel. |
@@ -81,7 +83,6 @@ Estas se escribieron entre los tres, por eso no llevan una etiqueta de nombre:
 | Escribir las decisiones técnicas | ✅ Hecho |
 | Escribir el modelo de datos | ✅ Hecho |
 | Cargar diez animales de ejemplo con fotos | 📝 Pendiente |
-| Escribir en el README cómo instalar y correr el proyecto | 📝 Pendiente |
 
 ---
 
