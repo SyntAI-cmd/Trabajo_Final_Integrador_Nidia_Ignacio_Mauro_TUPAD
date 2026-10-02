@@ -1,4 +1,4 @@
- # Decisiones técnicas
+# Decisiones técnicas
 
 Acá queda registrado qué elegimos, qué otras opciones evaluamos y por qué nos decidimos por una. La idea es que dentro de tres meses, cuando alguien pregunte "¿por qué esto y no aquello?", la respuesta esté escrita y no dependa de que nos acordemos.
 
@@ -73,6 +73,18 @@ La contra es que agrega una capa de abstracción: cuando algo no funciona, hay q
 **Por qué.** Son cinco o seis pantallas. Un framework de estilos resuelve el problema de mantener consistencia en un sistema grande, y acá ese problema no existe. Escribir el CSS a mano nos deja entender exactamente por qué cada cosa se ve como se ve, que para una materia de programación es más valioso que copiar clases de una documentación.
 
 Si más adelante las pantallas se multiplican, sumar Bootstrap u otra libreria es una tarde de trabajo.
+
+---
+
+## Decisión 6: Código organizado por dominio, con capas adentro
+
+**Qué elegimos:** un paquete por tema del negocio (`mascota`, `sanidad`, `adopcion`, `usuario`) y, dentro de cada uno, las capas de siempre (controller, service, repository, entidad).
+
+**Qué otras opciones evaluamos:** organizar todo por capas (`controller/`, `service/`, `repository/` en la raíz) y un monolito modular estricto con una herramienta que controle las fronteras (Spring Modulith).
+
+**Por qué.** Por capas es lo que más conocemos, pero cada carpeta termina mezclando clases de todos los temas. El monolito modular estricto es más prolijo, pero suma una herramienta que no vimos en la carrera. La opción elegida mantiene las capas que ya sabemos usar y agrupa el código por tema, así cada uno trabaja en su paquete y nos pisamos menos.
+
+El detalle de carpetas, capas y qué módulo puede usar a cuál está en `05-arquitectura.md`.
 
 ---
 
