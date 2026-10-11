@@ -37,6 +37,50 @@ Con Thymeleaf el servidor arma el HTML y lo manda ya listo. El navegador solo lo
 Si el día de mañana hiciera falta una aplicación móvil o una pantalla más interactiva, se puede agregar una API al mismo proyecto sin tirar nada de lo hecho.
 
 ---
+### Diagrama de Componentes y Flujo Síncrono (SSR)
+
+Para dar mayor profundidad técnica al análisis del monolito elegido, se detalla a continuación el mapa de componentes del sistema y cómo se comunican de extremo a extremo:
+
+```mermaid
+graph TD
+    subgraph Cliente [Capa de Presentación / Cliente]
+        A[Navegador Web / Celular]
+    end
+
+    subgraph Servidor [Servidor Monolítico Spring Boot 3]
+        B[Controladores Spring MVC]
+        C[Motor de Vistas Thymeleaf]
+        D[Capa de Servicios / Lógica de Negocio]
+        E[Capa de Datos Spring Data JPA / Hibernate]
+    end
+
+    subgraph Persistencia [Persistencia]
+        F[(Base de Datos MySQL 8)]
+    end
+
+    %% Flujos de comunicación
+    A -->|1. Petición HTTP GET/POST| B
+    B -->|2. Solicita Datos / Reglas| D
+    D -->|3. Consultas de Entidades| E
+    E -->|4. SQL nativo / ORM| F
+    F -.->|5. Retorna Filas de Datos| E
+    E -.->|6. Devuelve Entidades Java| D
+    D -.->|7. Entrega Objetos de Negocio DTO| B
+    B -->|8. Envía Modelo de Datos| C
+    C -.->|9. Renderiza HTML Dinámico| B
+    B -->|10. Respuesta HTTP HTML Puro + CSS| A
+
+    style Servidor fill:#f9f,stroke:#333,stroke-width:2px
+    style Persistencia fill:#bbf,stroke:#333,stroke-width:2px
+```
+
+**Justificación del Flujo:**
+1. El cliente (visitante u operador) interactúa exclusivamente mediante peticiones HTTP estándar.
+2. Los **Controladores Spring MVC** interceptan la solicitud y delegan el procesamiento lógico a la **Capa de Servicios**.
+3. La persistencia se resuelve mediante **Spring Data JPA**, abstrayendo el SQL hacia el motor **MySQL 8**.
+4. Una vez obtenidos los objetos de negocio, el controlador los inyecta en el **Motor Thymeleaf**, el cual ensambla el HTML final de forma síncrona dentro del servidor. El cliente recibe un documento web nativo, optimizando la velocidad en dispositivos de hardware limitado.
+
+---
 
 ## Decisión 3: MySQL como base de datos
 
