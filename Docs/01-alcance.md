@@ -35,6 +35,16 @@ El visitante no ve las vacunas. Es información interna del refugio y no aporta 
 | Cambiar el estado | Mover al animal entre los cuatro estados posibles. |
 | Dar de baja | El animal deja de verse, pero no se borra de la base. Se guarda el registro. |
 
+## Arquitectura de Módulos del Sistema
+
+Para dar soporte técnico a las acciones anteriores, el sistema se compone de cuatro módulos funcionales interconectados en una arquitectura monolítica:
+
+1. **Módulo de Autenticación y Seguridad:** Controla el acceso al panel administrativo mediante Spring Security. Gestiona sesiones de usuario (personal de refugio) y protege las rutas de edición.
+2. **Módulo de Catálogo Público:** Filtra y expone los animales disponibles para adopción. Consulta la base de datos de manera directa y síncrona para armar las vistas públicas.
+3. **Módulo de Gestión de Animales (Admin):** Permite el ciclo de vida de los datos del animal (CRUD). Procesa la subida de imágenes locales y actualiza los estados en la base de datos.
+4. **Módulo de Historial Sanitario:** Gestiona de forma cronológica las vacunas y tratamientos médicos aplicados, asociándolos de forma unívoca a la ficha de cada animal.
+
+
 ## Los estados de un animal
 
 Un animal siempre está en uno de estos cuatro estados:
@@ -45,6 +55,15 @@ Un animal siempre está en uno de estos cuatro estados:
 - **No disponible.** Cualquier otro caso: está enfermo, en tratamiento, o se fue del refugio por otro motivo.
 
 El operador cambia el estado a mano. No hay reglas automáticas que lo cambien solo. Esa decisión es a propósito: automatizar el pasaje de estados requiere definir un montón de casos borde que no conocemos todavía.
+
+## Flujo de Trabajo de Caso Crítico: Alta y Vacunación de un Animal
+
+Para entender cómo cooperan los módulos en un caso del mundo real, se describe el flujo síncrono del sistema:
+
+1. **Petición del Operario (HTTP POST):** El administrativo (previamente validado por el *Módulo de Seguridad*) envía el formulario con los datos básicos del animal rescatado.
+2. **Persistencia Inicial:** El *Módulo de Gestión de Animales* recibe los datos a través de su controlador, procesa la foto en el servidor de archivos y persiste la entidad en la base de datos con el estado inicial `DISPONIBLE`.
+3. **Invocación Sanitaria:** El operario ingresa a la ficha recién creada del animal y registra una dosis de vacuna. El *Módulo de Historial Sanitario* toma el ID del animal, valida su existencia e inserta una nueva fila en el historial médico.
+4. **Actualización del Catálogo:** De forma inmediata, el *Módulo de Catálogo Público* refleja en la web el nuevo animal con su estado de vacunación actualizado, listado para que cualquier adoptante lo visualice sin demoras de caché.
 
 ## Qué queda afuera
 
