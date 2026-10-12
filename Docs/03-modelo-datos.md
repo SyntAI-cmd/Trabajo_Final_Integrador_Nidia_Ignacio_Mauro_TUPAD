@@ -1,127 +1,158 @@
-# Modelo de datos
+# Modelo de Datos y Diccionario Formal
 
-El sistema guarda su información en seis tablas. Este documento explica qué guarda cada una y por qué está diseñada así.
-
-## Cómo se relacionan
-
-usuario (Personal del refugio)
-
-adoptante (Persona que adopta) ───< adopcion >─── mascota ─┬─< vacuna
-                                                           └─< foto
-
-La tabla `usuario` pertenece de forma exclusiva al personal que gestiona el refugio. Los procesos de adopción se vinculan formalmente entre el `adoptante` (persona de la comunidad) y la `mascota` mediante la tabla intermedia `adopcion`.
+El sistema guarda su información en seis tablas principales y dos de control. Este documento explica la estructura lógica de la base de datos MySQL 8 utilizando un diccionario formal que especifica restricciones de dominio, eliminando ambigüedades semánticas.
 
 ---
 
-## Tabla `usuario`
+### Diagrama Entidad-Relación Completo (Notación UML)
 
-Las personas que trabajan en el refugio y entran al sistema.
+Para visualizar las cardinalidades y asociaciones físicas del modelo relacional, se implementa el siguiente mapa bajo el estándar solicitado:
 
-| Columna | Tipo | Descripción |
-|---|---|---|
-| id | entero, autoincremental | Identificador. |
-| nombre | texto (100) | Nombre y apellido, para mostrar en pantalla. |
-| email | texto (150), único | Con esto inicia sesión. |
-| password | texto (255) | La contraseña **encriptada**. Nunca se guarda tal cual la escribió el usuario. |
-| activo | booleano | Si está en `false`, la persona no puede iniciar sesión. Sirve para dar de baja a alguien sin borrar su registro. |
+```mermaid
+classDiagram
+    class USUARIO {
+        +Int id
+        +String nombre
+        +String email
+        +String password
+        +Boolean activo
+    }
+    
+    class MASCOTA {
+        +Int id
+        +String nombre
+        +String especie
+        +String sexo
+        +String tamanio
+        +Date fecha_ingreso
+        +String estado
+    }
+    
+    class VACUNA {
+        +Int id
+        +Int mascota_id
+        +String nombre
+        +Date fecha_aplicacion
+    }
 
-**Por qué la contraseña va encriptada.** Si alguien accede a la base, no puede leer las contraseñas. Spring Boot trae una herramienta (BCrypt) que se encarga de esto: al guardar la transforma, y al iniciar sesión compara sin necesidad de desencriptarla nunca.
+    class FOTO {
+        +Int id
+        +Int mascota_id
+        +String archivo
+        +Boolean principal
+    }
 
-**Por qué no hay una columna de rol.** Porque todos los usuarios del sistema hacen lo mismo. Agregar roles cuando hay un solo tipo de usuario es escribir código que nunca se ejecuta.
+    class ADOPTANTE {
+        +Int id
+        +String nombre_completo
+        +String dni
+        +String telefono
+    }
 
----
+    class ADOPCION {
+        +Int id
+        +Int adoptante_id
+        +Int mascota_id
+        +Date fecha_adopcion
+    }
 
-## Tabla `mascota`
-
-El animal. Es la tabla central del sistema.
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| id | entero, autoincremental | Identificador. |
-| nombre | texto (80) | El nombre que le puso el refugio. |
-| especie | texto corto | PERRO o GATO. |
-| sexo | texto corto | MACHO o HEMBRA. |
-| tamanio | texto corto | CHICO, MEDIANO o GRANDE. |
-| fecha_nacimiento_aprox | fecha, puede estar vacía | Casi nunca se sabe la fecha exacta. Se carga una estimación, o se deja vacía. |
-| fecha_ingreso | fecha | Cuándo llegó al refugio. Sirve para saber hace工夫 cuánto está esperando. |
-| descripcion | texto largo | Cómo es el animal, cómo se lleva con chicos o con otros animales, si tiene alguna particularidad. Texto libre. |
-| estado | texto corto | DISPONIBLE, EN_PROCESO, ADOPTADO o NO_DISPONIBLE. |
-
-**Por qué la fecha de nacimiento puede estar vacía.** Porque a un animal que aparece en la calle nadie le sabe la edad. Obligar a cargar una fecha llevaría a que la gente invente datos, y un dato inventado es peor que un dato ausente.
-
-**Por qué guardamos la fecha de nacimiento y no la edad.** Si guardáramos "2 años", ese número queda mal dentro de un año. La fecha no se desactualiza nunca: la edad se calcula al momento de mostrarla.
-
-**Por qué el estado es una columna y no una tabla aparte.** Son cuatro valores fijos que no van a cambiar. Una tabla de estados tendría sentido si el refugio pudiera crear estados nuevos, y no es el caso.
-
----
-
-## Tabla `vacuna`
-
-Cada aplicación de una vacuna a un animal. Es el registro sanitario.
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| id | entero, autoincremental | Identificador. |
-| mascota_id | entero | A qué mascota corresponde. |
-| nombre | texto (100) | Qué vacuna se aplicó (antirrábica, quíntuple, etc.). |
-| fecha_aplicacion | fecha | Cuándo se aplicó. |
-| proxima_dosis | fecha, puede estar vacía | Cuándo corresponde la siguiente, si corresponde alguna. |
-| observaciones | texto largo, puede estar vacío | Cualquier nota del veterinario. |
-
-**Por qué una fila por aplicación y no una columna en `mascota`.** Un animal se vacuna varias veces a lo largo de su vida, y la misma vacuna se repite con el tiempo. Si esto fuera una columna en la tabla `mascota`, cada vacuna nueva pisaría a la anterior y se perdería el historial. Que sea una tabla aparte permite guardar todo y mostrarlo ordenado por fecha.
-
-**Por qué el nombre de la vacuna es texto libre y no una lista cerrada.** Porque no conocemos el listado completo de vacunas que aplica el refugio, y una lista incompleta obliga al operador a elegir la opción equivocada. Si más adelante se ve que siempre se cargan las mismas cuatro o cinco, se convierte en una lista.
-
----
-
-## Tabla `foto`
-
-Las imágenes de cada animal.
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| id | entero, autoincremental | Identificador. |
-| mascota_id | entero | A qué mascota corresponde. |
-| archivo | texto (255) | El nombre del archivo de imagen guardado en el servidor. |
-| principal | booleano | Si es `true`, es la foto que se muestra en el listado. |
-
-**Por qué se guarda el nombre del archivo y no la imagen.** Las imágenes se guardan como archivos en una carpeta del servidor, y en la base solo queda la referencia. Guardar imágenes dentro de la base la hace pesada, lenta de consultar y difícil de respaldar.
-
-**Por qué existe la columna `principal`.** En el listado se muestra una sola foto por animal. Sin esta marca, el sistema tendría que elegir una al azar o siempre la primera cargada, y no necesariamente es la mejor.
+    MASCOTA "1" --* "0..*" VACUNA : posee
+    MASCOTA "1" --* "0..*" FOTO : contiene
+    MASCOTA "1" --o "0..1" ADOPCION : aplica
+    ADOPTANTE "1" --* "0..*" ADOPCION : realiza
+```
 
 ---
 
-## Tabla `adoptante`
+### Diccionario de Datos del Sistema
 
-Registro de las personas interesadas en adoptar una mascota. No tienen credenciales de acceso al sistema operativo del refugio.
+#### 1. Tabla: `usuario`
+Las personas que trabajan en el refugio y administran la plataforma.
 
-| Columna | Tipo | Descripción |
-|---|---|---|
-| id | entero, autoincremental | Identificador único del adoptante. |
-| nombre_completo | texto (100) | Nombre y apellido del interesado. |
-| dni | texto (20), único | Documento de identidad indispensable para actas legales. |
-| telefono | texto (30) | Teléfono de contacto. |
-| direccion | texto (255) | Domicilio (requerido para visitas de seguimiento). |
+| Campo | Tipo de Dato | Restricciones / Dominio | Descripción Técnica |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | Identificador único y correlativo. |
+| `nombre` | `VARCHAR(100)`| NOT NULL | Nombre y apellido, para mostrar en pantalla. |
+| `email` | `VARCHAR(150)`| NOT NULL, UNIQUE | Correo electrónico con el que inicia sesión. |
+| `password` | `VARCHAR(255)`| NOT NULL | Clave de acceso encriptada en el servidor. |
+| `activo` | `BOOLEAN` | DEFAULT TRUE | Estado lógico para dar de baja sin borrar filas. |
+
+*   **Por qué la contraseña va encriptada:** Si alguien accede a la base, no puede leer las credenciales. Spring Security (BCrypt) las transforma al guardar y las compara de forma segura.
+*   **Por qué no hay una columna de rol:** Todos los usuarios realizan las mismas acciones administrativas en un refugio chico.
+
+#### 2. Tabla: `mascota`
+El animal. Es la entidad central del circuito de trazabilidad.
+
+| Campo | Tipo de Dato | Restricciones / Dominio | Descripción Técnica |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | Identificador único e inmutable del animal. |
+| `nombre` | `VARCHAR(80)` | NOT NULL | Nombre de pila asignado por el refugio. |
+| `especie` | `VARCHAR(20)` | FK -> `especie_dicc` / `['PERRO', 'GATO']` | Clasificación taxonómica para filtros de búsqueda. |
+| `sexo` | `VARCHAR(10)` | CHECK (`'MACHO'`, `'HEMBRA'`) | Género biológico verificado del ejemplar. |
+| `tamanio` | `VARCHAR(10)` | CHECK (`'CHICO'`, `'MEDIANO'`, `'GRANDE'`) | Escala de contextura física del animal. |
+| `fecha_nacimiento_aprox`| `DATE` | NULL | Fecha aproximada estimada por el veterinario. |
+| `fecha_ingreso`| `DATE` | NOT NULL | Fecha calendario de su rescate o ingreso. |
+| `descripcion` | `TEXT` | NULL | Notas libres sobre temperamento o particularidades. |
+| `estado` | `VARCHAR(30)` | FK -> `estado_dicc` | Situación del animal en el circuito operativo. |
+
+*   **Por qué la fecha de nacimiento puede estar vacía:** A un animal rescatado de la calle no se le conoce la edad exacta de forma inmediata; obligar a meter un dato falso daña las métricas. Se calcula la edad de forma dinámica en la vista para evitar desactualizaciones anuales.
+*   **Por qué el estado usa claves foráneas:** Se restringen contra tablas diccionarios fijas (`DISPONIBLE`, `EN_PROCESO`, `ADOPTADO`, `NO_DISPONIBLE`) para asegurar que no se carguen estados inválidos por error humano.
+
+#### 3. Tabla: `vacuna`
+Cada aplicación de una dosis sanitaria.
+
+| Campo | Tipo de Dato | Restricciones / Dominio | Descripción Técnica |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | Identificador único de la transacción médica. |
+| `mascota_id` | `INT` | FK -> `mascota(id)` ON DELETE CASCADE | Vínculo con el animal receptor de la dosis. |
+| `nombre` | `VARCHAR(100)`| NOT NULL | Nombre comercial o tipo de vacuna aplicada. |
+| `fecha_aplicacion`| `DATE` | NOT NULL | Fecha calendario de la inoculación. |
+| `proxima_dosis` | `DATE` | NULL | Fecha sugerida para el refuerzo sanitario. |
+| `observaciones` | `TEXT` | NULL | Comentarios clínicos libres del profesional. |
+
+*   **Por qué una tabla aparte:** Un animal recibe múltiples vacunas en su ciclo de vida. Si fuera una columna fija en `mascota`, cada dosis nueva pisaría los registros anteriores perdiendo el historial clínico.
+
+#### 4. Tabla: `foto`
+Referencias de imágenes asociadas a los animales.
+
+| Campo | Tipo de Dato | Restricciones / Dominio | Descripción Técnica |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | Identificador único de la imagen. |
+| `mascota_id` | `INT` | FK -> `mascota(id)` ON DELETE CASCADE | Vínculo con el animal retratado. |
+| `archivo` | `VARCHAR(255)`| NOT NULL | Ruta o nombre del archivo almacenado en disco. |
+| `principal` | `BOOLEAN` | DEFAULT FALSE | Bandera para determinar la portada del catálogo. |
+
+*   **Por qué se guarda la referencia:** Alojar archivos binarios (*BLOB*) directo en la base de datos degrada la velocidad de las consultas síncronas. Se opta por guardar la imagen en el sistema de archivos del servidor y persistir solo el string de referencia.
+
+#### 5. Tabla: `adoptante`
+Registro formal de civiles interesados en adoptar.
+
+| Campo | Tipo de Dato | Restricciones / Dominio | Descripción Técnica |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | Identificador del ciudadano aspirante. |
+| `nombre_completo`| `VARCHAR(100)`| NOT NULL | Nombre y apellido del interesado. |
+| `dni` | `VARCHAR(20)` | NOT NULL, UNIQUE | Documento nacional indispensable para actas de adopción. |
+| `telefono` | `VARCHAR(30)` | NOT NULL | Teléfono de contacto directo. |
+| `direccion` | `VARCHAR(255)`| NOT NULL | Domicilio requerido para visitas de seguimiento. |
+
+#### 6. Tabla: `adopcion`
+El contrato operativo que une al adoptante con el animal de forma unívoca.
+
+| Campo | Tipo de Dato | Restricciones / Dominio | Descripción Técnica |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PRIMARY KEY, AUTO_INCREMENT | Identificador único del trámite legal. |
+| `adoptante_id` | `INT` | FK -> `adoptante(id)` ON DELETE RESTRICT | Persona externa que adoptó al animal. |
+| `mascota_id` | `INT` | FK -> `mascota(id)`, UNIQUE | Mascota transferida a la familia. |
+| `fecha_adopcion`| `DATE` | NOT NULL | Fecha exacta de la entrega del animal. |
+| `notas_seguimiento`| `TEXT` | NULL | Historial de auditorías de bienestar animal. |
+
+*   **Por qué `mascota_id` es UNIQUE:** Bloquea por completo la posibilidad de que un animal sufra dos procesos de adopción concurrentes por un error del operador.
+*   **Por qué `adoptante_id` usa RESTRICT:** Impide borrar accidentalmente a una persona de la base de datos si tiene actas o animales vinculados bajo su responsabilidad.
 
 ---
 
-## Tabla `adopcion`
+## Alcance y Exclusiones del Modelo
 
-El registro oficial del trámite. Une al adoptante con la mascota que adopta, permitiendo realizar seguimientos a futuro.
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| id | entero, autoincremental | Identificador único del trámite. |
-| adoptante_id | entero | Qué persona externa adoptó al animal. |
-| mascota_id | entero, único | Qué mascota fue adoptada. Es único porque un animal no se adopta dos veces. |
-| fecha_adopcion | fecha | Cuándo se concretó la entrega. |
-| notas_seguimiento | texto largo, puede estar vacío | Historial de visitas, llamadas o notas de bienestar del animal en su nuevo hogar. |
-
-**Por qué `mascota_id` tiene una restricción de unicidad (UNIQUE).** Para evitar errores humanos: un animal no puede ser adoptado simultáneamente por dos registros diferentes en el sistema.
-
----
-
-## Lo que este modelo no contempla
-
-- **No hay historial de cambios generales.** Si alguien cambia el estado de un animal sin concretar una adopción, el estado anterior se pierde. Registrar el historial completo requiere una tabla de auditoría más y no la necesitamos todavía.
-- **No hay tabla de refugios.** El sistema se instala de forma local o única para un solo refugio.                                                          
+*   **Sin Auditoría de Estados:** No guardamos el histórico de cambios de estados intermedios. El estado se sobreescribe directamente en la entidad `mascota` a excepción del paso a `ADOPTADO`, que queda registrado en la tabla transaccional `adopcion`.
+*   **Monorrefugio:** El modelo está diseñado para operar con un único esquema centralizado, omitiendo la partición multi-inquilino (*multi-tenant*).
+                                                         
