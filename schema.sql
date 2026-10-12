@@ -51,10 +51,6 @@ CREATE TABLE estado_dicc (
     nombre VARCHAR(30) PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Inserción obligatoria de valores permitidos inmutables del negocio
-INSERT INTO especie_dicc (nombre) VALUES ('PERRO'), ('GATO');
-INSERT INTO estado_dicc (nombre) VALUES ('DISPONIBLE'), ('EN_PROCESO'), ('ADOPTADO'), ('NO_DISPONIBLE');
-
 
 -- =================================================================
 -- 3. Tabla: MASCOTA (Con validaciones de integridad estrictas)
